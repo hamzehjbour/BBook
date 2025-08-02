@@ -5,7 +5,8 @@ A full-stack web application built with **React (Vite)** for the frontend, **Nod
 ## 📁 Project Structure
 
 <pre lang="markdown">
-  ``` ├── backend
+  ```
+   ├── backend
    │ ├── prisma
    │ │ ├── schema.prisma
    │ │ └── seed.js
@@ -21,7 +22,8 @@ A full-stack web application built with **React (Vite)** for the frontend, **Nod
    │ │ └── main.jsx
    │ └── Dockerfile
    ├── docker-compose.yml
-   └── README.md```
+   └── README.md
+  ```
 </pre>
 
 ## ⚙️ Setup Instructions
