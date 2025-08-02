@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require("../generated/prisma");
 const bcrypt = require("bcrypt");
 
 const prisma = new PrismaClient();
@@ -9,7 +9,8 @@ async function main() {
   const commonPassword = "pass1234";
   const hashedPassword = await bcrypt.hash(commonPassword, 12);
 
-  const adminUser = await prisma.users.upsert({
+  // Admin User
+  const adminUser = await prisma.Users.upsert({
     where: { email: "admin@example.com" },
     update: {},
     create: {
@@ -21,7 +22,8 @@ async function main() {
   });
   console.log(`Created admin user: ${adminUser.email}`);
 
-  const receptionistUser = await prisma.users.upsert({
+  // Receptionist
+  const receptionistUser = await prisma.Users.upsert({
     where: { email: "receptionist@example.com" },
     update: {},
     create: {
@@ -33,6 +35,7 @@ async function main() {
   });
   console.log(`Created receptionist user: ${receptionistUser.email}`);
 
+  // Staff
   const staffUsersData = [
     { email: "staff1@example.com", name: "Alice Staff" },
     { email: "staff2@example.com", name: "Bob Staff" },
@@ -41,7 +44,7 @@ async function main() {
 
   const staffUsers = [];
   for (const staff of staffUsersData) {
-    const createdStaff = await prisma.users.upsert({
+    const user = await prisma.Users.upsert({
       where: { email: staff.email },
       update: {},
       create: {
@@ -51,11 +54,12 @@ async function main() {
         role: "staff",
       },
     });
-    staffUsers.push(createdStaff);
-    console.log(`Created staff user: ${createdStaff.email}`);
+    staffUsers.push(user);
+    console.log(`Created staff user: ${user.email}`);
   }
 
-  const serviceHaircut = await prisma.services.upsert({
+  // Services
+  const haircut = await prisma.Services.upsert({
     where: { name: "Haircut" },
     update: {},
     create: {
@@ -64,9 +68,8 @@ async function main() {
       category: "Hair",
     },
   });
-  console.log(`Created service: ${serviceHaircut.name}`);
 
-  const serviceManicure = await prisma.services.upsert({
+  const manicure = await prisma.Services.upsert({
     where: { name: "Manicure" },
     update: {},
     create: {
@@ -75,9 +78,8 @@ async function main() {
       category: "Nails",
     },
   });
-  console.log(`Created service: ${serviceManicure.name}`);
 
-  const serviceMassage = await prisma.services.upsert({
+  const massage = await prisma.Services.upsert({
     where: { name: "Massage" },
     update: {},
     create: {
@@ -86,83 +88,59 @@ async function main() {
       category: "Spa",
     },
   });
-  console.log(`Created service: ${serviceMassage.name}`);
 
+  console.log("Created services.");
+
+  // Appointments
   const now = new Date();
 
-  const appt1Date = new Date(now);
-  appt1Date.setDate(now.getDate() + 1);
-  appt1Date.setHours(10, 0, 0, 0);
-
-  await prisma.appointments.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      serviceId: serviceHaircut.id,
+  const appt1 = await prisma.Appointments.create({
+    data: {
+      serviceId: haircut.id,
       staffId: staffUsers[0].id,
       clientName: "Client A",
-      appointmentUTC: appt1Date,
+      appointmentUTC: new Date(now.setDate(now.getDate() + 1)),
       status: "PENDING",
     },
   });
-  console.log("Created Appointment 1");
 
-  const appt2Date = new Date(now);
-  appt2Date.setDate(now.getDate() + 1);
-  appt2Date.setHours(11, 30, 0, 0);
-
-  await prisma.appointments.upsert({
-    where: { id: 2 },
-    update: {},
-    create: {
-      serviceId: serviceManicure.id,
+  const appt2 = await prisma.Appointments.create({
+    data: {
+      serviceId: manicure.id,
       staffId: staffUsers[1].id,
       clientName: "Client B",
-      appointmentUTC: appt2Date,
+      appointmentUTC: new Date(new Date().setHours(11, 30, 0, 0)),
       status: "CONFIRMED",
     },
   });
-  console.log("Created Appointment 2");
 
-  const appt3Date = new Date(now);
-  appt3Date.setHours(9, 0, 0, 0);
-
-  await prisma.appointments.upsert({
-    where: { id: 3 },
-    update: {},
-    create: {
-      serviceId: serviceMassage.id,
-      staffId: staffUsers[2].id, // Charlie Staff
+  const appt3 = await prisma.Appointments.create({
+    data: {
+      serviceId: massage.id,
+      staffId: staffUsers[2].id,
       clientName: "Client C",
-      appointmentUTC: appt3Date,
+      appointmentUTC: new Date(new Date().setHours(9, 0, 0, 0)),
       status: "COMPLETED",
     },
   });
-  console.log("Created Appointment 3");
 
-  const appt4Date = new Date(now);
-  appt4Date.setDate(now.getDate() + 2); // Day after tomorrow
-  appt4Date.setHours(14, 0, 0, 0); // 02:00 PM
-
-  await prisma.appointments.upsert({
-    where: { id: 4 },
-    update: {},
-    create: {
-      serviceId: serviceHaircut.id,
+  const appt4 = await prisma.Appointments.create({
+    data: {
+      serviceId: haircut.id,
       staffId: staffUsers[0].id,
       clientName: "Client D",
-      appointmentUTC: appt4Date,
+      appointmentUTC: new Date(new Date().setDate(now.getDate() + 2)),
       status: "CANCELLED",
     },
   });
-  console.log("Created Appointment 4");
 
+  console.log("Created appointments.");
   console.log("Seeding finished.");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("Seeding error:", e);
     process.exit(1);
   })
   .finally(async () => {

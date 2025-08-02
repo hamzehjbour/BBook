@@ -1,7 +1,4 @@
-# ====================
-# docker-compose.yml
-# ====================
-# version: "3.9"
+version: "3.9"
 
 services:
   db:
@@ -31,28 +28,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   backend:
     build:
       context: ./backend
-    container_name: backend
+    container_name: bbook-backend
     depends_on:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql://appuser:apppass@db:3306/appdb
+      DATABASE_URL: mysql://appuser:apppass@mysql:3306/appdb
       NODE_ENV: development
     ports:
       - "3000:3000"
     volumes:
       - ./backend:/app
-    command: sh -c "npx prisma db seed && node server.js"
-    # command: sh -c "npx prisma migrate deploy && node server.js"
+      # Preserve node_modules from container by mounting it as anonymous volume
+      - /app/node_modules
+    command: sh -c " echo '🔍 Debugging Prisma setup...' && echo 'Current directory:' && pwd && echo 'Node modules structure:' && ls -la node_modules/ | head -10 && echo 'Prisma client check:' && ls -la node_modules/.prisma/ 2>/dev/null || echo 'No .prisma directory found' && echo '🔧 Generating Prisma client...' && npx prisma generate && echo '✅ Prisma generate completed' && echo 'After generate - checking .prisma:' && ls -la node_modules/.prisma/ && echo '📊 Pushing schema...' && npx prisma db push --accept-data-loss && echo '🌱 Running seed directly with node...' && node prisma/seed.js && echo '✅ All setup complete, starting server...' && node server.js"
+    networks:
+      - app-network
 
   frontend:
     build:
       context: ./frontend
-    container_name: frontend
+    container_name: bbook-frontend
     depends_on:
       backend:
         condition: service_started
@@ -62,6 +64,12 @@ services:
       - ./frontend:/app
       - /app/node_modules
     command: npm run dev -- --host
+    networks:
+      - app-network
 
 volumes:
   mysql-data:
+
+networks:
+  app-network:
+    driver: bridge

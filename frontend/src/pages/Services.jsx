@@ -50,8 +50,6 @@ function Services() {
     createService(newItem);
   }
 
-  console.log(user);
-
   return (
     <StyledDiv>
       <h1>Services</h1>

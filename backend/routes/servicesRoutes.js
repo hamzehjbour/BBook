@@ -11,7 +11,9 @@ const router = express.Router();
 
 router.use(protect);
 
-router.route("/").get(restrictTo("admin", "receptionist"), getServices);
+router
+  .route("/")
+  .get(restrictTo("admin", "receptionist", "staff"), getServices);
 
 router.use(restrictTo("admin"));
 router.route("/").post(createService);

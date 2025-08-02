@@ -11,12 +11,6 @@ const AppError = require("./utils/AppError");
 
 const app = express();
 
-const allowedOrigins = [
-  "http://127.0.0.1:5173",
-  "http://172.18.0.4:5173/",
-  "http://localhost:5173/",
-];
-
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
@@ -27,27 +21,15 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: "*",
     credentials: true,
   }),
 );
 
 app.options(
-  "*",
+  "",
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: "*",
     credentials: true,
   }),
 );
