@@ -4,23 +4,25 @@ A full-stack web application built with **React (Vite)** for the frontend, **Nod
 
 ## 📁 Project Structure
 
-├── backend
-│ ├── prisma
-│ │ ├── schema.prisma
-│ │ └── seed.js
-│ ├── src
-│ │ ├── controllers
-│ │ ├── routes
-│ │ └── index.js
-│ └── Dockerfile
-├── frontend
-│ ├── src
-│ │ ├── components
-│ │ ├── pages
-│ │ └── main.jsx
-│ └── Dockerfile
-├── docker-compose.yml
-└── README.md
+<pre lang="markdown">
+  ``` ├── backend
+   │ ├── prisma
+   │ │ ├── schema.prisma
+   │ │ └── seed.js
+   │ ├── src
+   │ │ ├── controllers
+   │ │ ├── routes
+   │ │ └── index.js
+   │ └── Dockerfile
+   ├── frontend
+   │ ├── src
+   │ │ ├── components
+   │ │ ├── pages
+   │ │ └── main.jsx
+   │ └── Dockerfile
+   ├── docker-compose.yml
+   └── README.md```
+</pre>
 
 ## ⚙️ Setup Instructions
 
