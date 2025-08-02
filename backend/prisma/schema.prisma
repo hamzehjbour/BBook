@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Services {
+  id  Int @id @default(autoincrement())
+  name String @db.VarChar(255)
+  price Int
+  category String @db.VarChar(255)
+  appointments Appointments[]
+  isDeleted      Boolean  @default(false)
+}
+
+model Users {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  role      Roles     @default(admin)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  staffAppointments Appointments[] @relation("StaffAppointments")
+  isDeleted      Boolean  @default(false)
+}
+
+model Appointments {
+  id             Int       @id @default(autoincrement())
+  service        Services  @relation(fields: [serviceId], references: [id])
+  serviceId      Int
+  staff          Users      @relation("StaffAppointments", fields: [staffId], references: [id])
+  staffId        Int
+  clientName     String    @db.VarChar(100)
+  appointmentUTC DateTime @map("appointment_utc") // stored in UTC format
+  status         AppointmentStatus @default(PENDING)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  isDeleted      Boolean  @default(false)
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum Roles {
+  admin
+  receptionist
+  staff
+}
