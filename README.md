@@ -41,11 +41,10 @@ A full-stack web application built with **React (Vite)** for the frontend, **Nod
 ### Prerequisites
 
 - Docker & Docker Compose installed
-- Node.js and npm installed (for running locally without Docker)
 
 ---
 
-## 🚀 Running the Project with Docker (Recommended)
+## 🚀 Running the Project with Docker
 
 1. Clone the repository:
 
