@@ -40,6 +40,7 @@ async function main() {
     { email: "staff1@example.com", name: "Alice Staff" },
     { email: "staff2@example.com", name: "Bob Staff" },
     { email: "staff3@example.com", name: "Charlie Staff" },
+    { email: "staff4@example.com", name: "Diana Staff" },
   ];
 
   const staffUsers = [];
@@ -61,7 +62,7 @@ async function main() {
   // Services
   const haircut = await prisma.Services.upsert({
     where: { name: "Haircut" },
-    update: {},
+    update: { category: "Hair" },
     create: {
       name: "Haircut",
       price: 50,
@@ -71,7 +72,7 @@ async function main() {
 
   const manicure = await prisma.Services.upsert({
     where: { name: "Manicure" },
-    update: {},
+    update: { category: "Nails" },
     create: {
       name: "Manicure",
       price: 30,
@@ -81,16 +82,37 @@ async function main() {
 
   const massage = await prisma.Services.upsert({
     where: { name: "Massage" },
-    update: {},
+    update: { category: "Skin Care" },
     create: {
       name: "Massage",
       price: 80,
-      category: "Spa",
+      category: "Skin Care",
+    },
+  });
+
+  const facial = await prisma.Services.upsert({
+    where: { name: "Facial Treatment" },
+    update: { category: "Skin Care" },
+    create: {
+      name: "Facial Treatment",
+      price: 70,
+      category: "Skin Care",
+    },
+  });
+
+  const makeup = await prisma.Services.upsert({
+    where: { name: "Bridal Makeup" },
+    update: { category: "Makeup" },
+    create: {
+      name: "Bridal Makeup",
+      price: 120,
+      category: "Makeup",
     },
   });
 
   console.log("Created services.");
 
+  // Appointments
   // Appointments
   const now = new Date();
 
@@ -133,6 +155,119 @@ async function main() {
       status: "CANCELLED",
     },
   });
+
+  const appt5 = await prisma.Appointments.create({
+    data: {
+      serviceId: facial.id,
+      staffId: staffUsers[2].id,
+      clientName: "Client E",
+      appointmentUTC: new Date(new Date().setHours(14, 0, 0, 0)),
+      status: "PENDING",
+    },
+  });
+
+  const appt6 = await prisma.Appointments.create({
+    data: {
+      serviceId: makeup.id,
+      staffId: staffUsers[3].id,
+      clientName: "Client F",
+      appointmentUTC: new Date(new Date().setHours(16, 30, 0, 0)),
+      status: "CONFIRMED",
+    },
+  });
+
+  const appt7 = await prisma.Appointments.create({
+    data: {
+      serviceId: manicure.id,
+      staffId: staffUsers[1].id,
+      clientName: "Client G",
+      appointmentUTC: new Date(new Date().setHours(10, 0, 0, 0)),
+      status: "COMPLETED",
+    },
+  });
+
+  const appt8 = await prisma.Appointments.create({
+    data: {
+      serviceId: haircut.id,
+      staffId: staffUsers[0].id,
+      clientName: "Client H",
+      appointmentUTC: new Date(new Date().setHours(18, 0, 0, 0)),
+      status: "PENDING",
+    },
+  });
+
+  // Extra appointments to reach 15
+  const appt9 = await prisma.Appointments.create({
+    data: {
+      serviceId: massage.id,
+      staffId: staffUsers[2].id,
+      clientName: "Client I",
+      appointmentUTC: new Date(new Date().setHours(13, 0, 0, 0)),
+      status: "CONFIRMED",
+    },
+  });
+
+  const appt10 = await prisma.Appointments.create({
+    data: {
+      serviceId: makeup.id,
+      staffId: staffUsers[3].id,
+      clientName: "Client J",
+      appointmentUTC: new Date(new Date().setHours(15, 0, 0, 0)),
+      status: "PENDING",
+    },
+  });
+
+  const appt11 = await prisma.Appointments.create({
+    data: {
+      serviceId: facial.id,
+      staffId: staffUsers[2].id,
+      clientName: "Client K",
+      appointmentUTC: new Date(new Date().setHours(17, 0, 0, 0)),
+      status: "COMPLETED",
+    },
+  });
+
+  const appt12 = await prisma.Appointments.create({
+    data: {
+      serviceId: manicure.id,
+      staffId: staffUsers[1].id,
+      clientName: "Client L",
+      appointmentUTC: new Date(new Date().setHours(12, 0, 0, 0)),
+      status: "CANCELLED",
+    },
+  });
+
+  const appt13 = await prisma.Appointments.create({
+    data: {
+      serviceId: haircut.id,
+      staffId: staffUsers[0].id,
+      clientName: "Client M",
+      appointmentUTC: new Date(new Date().setHours(19, 0, 0, 0)),
+      status: "CONFIRMED",
+    },
+  });
+
+  const appt14 = await prisma.Appointments.create({
+    data: {
+      serviceId: makeup.id,
+      staffId: staffUsers[3].id,
+      clientName: "Client N",
+      appointmentUTC: new Date(new Date().setHours(20, 0, 0, 0)),
+      status: "PENDING",
+    },
+  });
+
+  const appt15 = await prisma.Appointments.create({
+    data: {
+      serviceId: facial.id,
+      staffId: staffUsers[2].id,
+      clientName: "Client O",
+      appointmentUTC: new Date(new Date().setHours(21, 0, 0, 0)),
+      status: "CONFIRMED",
+    },
+  });
+
+  console.log("Created 15 appointments.");
 
   console.log("Created appointments.");
   console.log("Seeding finished.");
