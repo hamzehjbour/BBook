@@ -8,10 +8,7 @@ export function useUpdateService() {
   const queryClient = useQueryClient();
 
   const { mutate: updateService, isPending } = useMutation({
-    mutationFn: ({ id, data }) => {
-      console.log(data);
-      updateServiceApi(user.token, id, data);
-    },
+    mutationFn: (data) => updateServiceApi(user.token, data),
 
     onSuccess: () => {
       queryClient.invalidateQueries(["services"]);

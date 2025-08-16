@@ -9,6 +9,8 @@ import { useDeleteUser } from "../features/users/useDeleteUser";
 import { useState } from "react";
 import CreateModal from "../features/users/CreateUserModal";
 import { useCreateUser } from "../features/users/useCreateUser";
+import UsersTableOperations from "../features/users/UsersTableOperations";
+import Pagination from "../ui/Pagination";
 
 const StyledDiv = styled.div`
   display: flex;
@@ -17,21 +19,24 @@ const StyledDiv = styled.div`
 `;
 
 function Staff() {
-  const { isPending, data } = useUsers();
+  const { isPending, data, result } = useUsers();
   const { deleteUser, isPending: isDeleting } = useDeleteUser();
-  const { createUser, isPending: isCreating } = useCreateUser();
+  const { isPending: isCreating } = useCreateUser();
   const [isCreate, setIsCreate] = useState(false);
 
   if (isPending) return <Spinner />;
 
-  function handleSaveCreate(newItem) {
-    setIsCreate(false);
-    createUser(newItem);
-  }
-
   return (
     <StyledDiv>
       <h1>Staff</h1>
+      <UsersTableOperations>
+        <button
+          onClick={() => setIsCreate((isCreate) => !isCreate)}
+          disabled={isCreating}
+        >
+          Add New Staff
+        </button>
+      </UsersTableOperations>
       <div>
         <Row>
           <StyledParagraph>
@@ -45,7 +50,7 @@ function Staff() {
           </StyledParagraph>
         </Row>
 
-        {data.data.users.map((item) => (
+        {data.users.map((item) => (
           <Row key={item.id}>
             <StyledParagraph>{item.name}</StyledParagraph>
             <StyledParagraph>{item.email}</StyledParagraph>
@@ -62,16 +67,10 @@ function Staff() {
       {isCreate && (
         <CreateModal
           onClose={() => setIsCreate((isCreate) => !isCreate)}
-          onSave={handleSaveCreate}
+          setIsCreate={setIsCreate}
         />
       )}
-
-      <button
-        onClick={() => setIsCreate((isCreate) => !isCreate)}
-        disabled={isCreating}
-      >
-        Add
-      </button>
+      <Pagination count={result} />
     </StyledDiv>
   );
 }

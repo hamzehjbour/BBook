@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import styled from "styled-components";
+import { useUpdateService } from "./useUpdateService";
 
 const Overlay = styled.div`
   position: fixed;
@@ -40,45 +42,63 @@ const ButtonRow = styled.div`
   gap: 1rem;
 `;
 
-export default function EditModal({ service, onClose, onSave }) {
-  const [form, setForm] = useState({
-    name: service.name,
-    price: service.price,
-    category: service.category,
-  });
+const Error = styled.span`
+  font-size: 1.4rem;
+  color: var(--color-red-700);
+`;
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    // console.log({ ...form, [e.target.name]: e.target.value });
-  }
+export default function EditModal({
+  service,
+  setIsEdit,
+  setEditItem,
+  onClose,
+}) {
+  const { updateService } = useUpdateService();
+  const queryClient = useQueryClient();
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  const { register, handleSubmit, formState } = useForm();
+
+  const { errors } = formState;
+
+  function onSubmit(data) {
     const payload = {
       ...service,
-      ...form,
-      price: parseInt(form.price, 10),
+      ...data,
+      price: parseInt(data.price, 10),
     };
-    console.log(payload);
-    onSave(payload);
+
+    updateService(payload, {
+      onSuccess: () => {
+        setIsEdit(false);
+        setEditItem(null);
+        queryClient.invalidateQueries(["services"]);
+      },
+    });
   }
 
   return (
     <Overlay>
       <ModalWrapper>
         <h3>Edit Service</h3>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <FormGroup>
             <Label>Service Name</Label>
-            <Input name="name" value={form.name} onChange={handleChange} />
+            <Input
+              id="name"
+              defaultValue={service.name}
+              {...register("name")}
+            />
+            {errors?.name?.message && <Error>{errors?.name?.message}</Error>}
           </FormGroup>
 
           <FormGroup>
             <Label>Service Category</Label>
             <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
+              id="category"
+              defaultValue={service.category}
+              {...register("category", {
+                required: "This field is required",
+              })}
             >
               <option value="">Select Category</option>
               <option value="Hair">Hair</option>
@@ -86,22 +106,32 @@ export default function EditModal({ service, onClose, onSave }) {
               <option value="Skin Care">Skin Care</option>
               <option value="Makeup">Makeup</option>
             </select>
+            {errors?.category?.message && (
+              <Error>{errors?.category?.message}</Error>
+            )}
           </FormGroup>
           <FormGroup>
             <Label>Service Price</Label>
             <Input
-              name="price"
+              id="price"
               type="number"
-              value={form.price}
-              onChange={handleChange}
+              defaultValue={service.price}
+              {...register("price", {
+                required: "This field is required",
+                validate: (val) =>
+                  val > 0 || "The price must be greater than 0",
+              })}
             />
+            {errors?.price?.message && <Error>{errors?.price?.message}</Error>}
           </FormGroup>
 
           <ButtonRow>
-            <button type="button" onClick={onClose}>
+            <button type="reset" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit">Save</button>
+            <button type="submit" onClick={handleSubmit}>
+              Save
+            </button>
           </ButtonRow>
         </form>
       </ModalWrapper>

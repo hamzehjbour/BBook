@@ -1,4 +1,5 @@
 const zod = require("zod");
+const PDFDocument = require("pdfkit");
 const prisma = require("../prisma/client");
 
 exports.getAppointments = async (req, res, next) => {
@@ -9,6 +10,7 @@ exports.getAppointments = async (req, res, next) => {
       startDate,
       endDate,
       includeDeleted,
+      sort = "-appointmentUTC",
       page = 1,
       limit = 10,
     } = req.query;
@@ -44,6 +46,12 @@ exports.getAppointments = async (req, res, next) => {
       filters.isDeleted = false;
     }
 
+    // SORTING
+    const orderBy = {};
+    const isDescending = sort.startsWith("-");
+    const sortField = isDescending ? sort.slice(1) : sort;
+    orderBy[sortField] = isDescending ? "desc" : "asc";
+
     //PAGINATION
     const take = Number(limit);
     const skip = (Number(page) - 1) * take;
@@ -62,6 +70,7 @@ exports.getAppointments = async (req, res, next) => {
           },
         },
       },
+      orderBy,
       take,
       skip,
     });
@@ -70,10 +79,12 @@ exports.getAppointments = async (req, res, next) => {
 
     res.status(200).json({
       status: "sucess",
-      result: appointments.length,
+      result: totalRows,
       page: Number(page),
       totalPages: Math.ceil(totalRows / take),
-      data: appointments,
+      data: {
+        appointments,
+      },
     });
   } catch (err) {
     next(err);
@@ -120,6 +131,10 @@ exports.updateAppointment = async (req, res, next) => {
 
     const newData = updateAppointmentZodSchema.parse(req.body);
 
+    if (newData.status) {
+      newData.status = newData.status.toUpperCase();
+    }
+
     const updatedAppointment = await prisma.appointments.update({
       where: {
         id: Number(id),
@@ -152,5 +167,139 @@ exports.deleteAppointment = async (req, res, next) => {
     });
   } catch (err) {
     return next(err);
+  }
+};
+
+exports.generateReport = async (req, res, next) => {
+  const { duration = "monthly" } = req.query;
+
+  const filter = {};
+
+  if (duration === "daily") {
+    filter.appointmentUTC = new Date().toISOString();
+  }
+
+  if (duration === "weekly") {
+    const today = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
+
+    filter.appointmentUTC = {
+      gte: oneWeekAgo.toISOString(),
+      lte: today.toISOString(),
+    };
+  }
+
+  if (duration === "monthly") {
+    const today = new Date();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setDate(today.getDate() - 30);
+
+    filter.appointmentUTC = {
+      gte: oneMonthAgo.toISOString(),
+      lte: today.toISOString(),
+    };
+  }
+
+  try {
+    const appointments = await prisma.appointments.findMany({
+      where: filter,
+      include: {
+        staff: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    const staffSummary = await prisma.users.findMany({
+      where: {
+        role: "staff",
+      },
+
+      include: {
+        _count: {
+          select: {
+            staffAppointments: {
+              where: filter,
+            },
+          },
+        },
+      },
+
+      orderBy: {
+        staffAppointments: {
+          _count: "desc",
+        },
+      },
+    });
+
+    const doc = new PDFDocument();
+    res.set({
+      "Content-Disposition": "attachment; filename=report.pdf",
+      "Content-type": "application/pdf",
+    });
+
+    doc.pipe(res);
+
+    doc.fontSize(20).text("Appointments Report", { align: "center" });
+    doc.moveDown();
+
+    // doc.fontSize(14).text(`Report Period: ${period || "Custom"}`);
+    doc.fontSize(14).text(`Report Period: Daily`);
+    doc.moveDown();
+
+    doc.fontSize(12).text("Appointments:");
+    doc.moveDown();
+
+    const appointmentsTableRows = [
+      ["Date", "Staff Name", "Client Name", "Status"],
+      ...appointments.map((appointment) => [
+        appointment.appointmentUTC.toLocaleString("en-UK", {
+          timeZone: "Asia/Amman",
+          weekday: "short",
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        appointment.staff.name,
+        appointment.clientName,
+        appointment.status,
+      ]),
+    ];
+
+    doc.table({
+      columnStyles: [160, "*", "*", "*"],
+      data: appointmentsTableRows,
+    });
+
+    doc.moveDown();
+
+    doc.fontSize(12).text("Staff Performance Summary: ");
+
+    const performanceTableRows = [
+      ["Staff Name", "Number of Appointments"],
+      ...staffSummary.map((summary) => [
+        summary.name,
+        summary._count.staffAppointments,
+      ]),
+    ];
+
+    doc.table({
+      columnStyles: ["*", "*"],
+      data: performanceTableRows,
+    });
+
+    doc.end();
+
+    // res.status(200).json({
+    //   status: "success",
+    // });
+  } catch (err) {
+    next(err);
   }
 };

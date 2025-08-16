@@ -1,5 +1,17 @@
-export async function getUsers(token) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
+export async function getUsers({ token, search, page }) {
+  const baseUrl = `${import.meta.env.VITE_API_URL}/users`;
+
+  const params = new URLSearchParams();
+
+  if (search) {
+    params.set("name", search.value);
+  }
+
+  if (page) {
+    params.set("page", page);
+  }
+
+  const res = await fetch(`${baseUrl}?${params.toString()}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

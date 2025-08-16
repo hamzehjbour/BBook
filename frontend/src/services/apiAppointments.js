@@ -1,5 +1,21 @@
-export async function getAppointments(token) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/appointments`, {
+export async function getAppointments({ token, filter, sort, page }) {
+  const baseUrl = `${import.meta.env.VITE_API_URL}/appointments`;
+
+  const params = new URLSearchParams();
+
+  if (filter?.field === "status") {
+    params.set("status", filter.value);
+  }
+
+  if (sort) {
+    params.set("sort", sort.value);
+  }
+
+  if (page) {
+    params.set("page", page);
+  }
+
+  const res = await fetch(`${baseUrl}?${params.toString()}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -22,9 +38,9 @@ export async function deleteAppointmentApi({ token, id }) {
   });
 }
 
-export async function updateAppointmentApi(token, id, updatedData) {
+export async function updateAppointmentApi(token, updatedData) {
   const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/appointments/${id}`,
+    `${import.meta.env.VITE_API_URL}/appointments/${updatedData.id}`,
     {
       method: "PATCH",
       headers: {
@@ -40,14 +56,14 @@ export async function updateAppointmentApi(token, id, updatedData) {
   return data;
 }
 
-export async function createAppointmentApi(token, updatedData) {
+export async function createAppointmentApi(token, newData) {
   const res = await fetch(`${import.meta.env.VITE_API_URL}/appointments/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(updatedData),
+    body: JSON.stringify(newData),
   });
 
   const data = await res.json();
@@ -55,4 +71,20 @@ export async function createAppointmentApi(token, updatedData) {
   console.log(data);
 
   return data;
+}
+
+export async function downloadReport(token, duration) {
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/appointments/report?duration=${duration}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to download report");
+
+  return await res.blob();
 }

@@ -1,5 +1,21 @@
-export async function getServices(token) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/services`, {
+export async function getServices({ token, sortService, search, page }) {
+  const baseUrl = `${import.meta.env.VITE_API_URL}/services`;
+
+  const params = new URLSearchParams();
+
+  if (sortService) {
+    params.set("sort", sortService.value);
+  }
+
+  if (search) {
+    params.set("category", search.value);
+  }
+
+  if (page) {
+    params.set("page", page);
+  }
+
+  const res = await fetch(`${baseUrl}?${params.toString()}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -12,20 +28,20 @@ export async function getServices(token) {
   return data;
 }
 
-export async function updateServiceApi(token, id, updatedData) {
-  console.log(updatedData);
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/services/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(updatedData),
-  });
+export async function updateServiceApi(token, updatedData) {
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/services/${updatedData.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updatedData),
+    }
+  );
 
   const data = await res.json();
-
-  console.log(data);
 
   return data;
 }
@@ -51,8 +67,6 @@ export async function createServiceApi(token, updatedData) {
   });
 
   const data = await res.json();
-
-  console.log(data);
 
   return data;
 }

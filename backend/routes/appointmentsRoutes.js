@@ -4,6 +4,7 @@ const {
   getAppointments,
   updateAppointment,
   deleteAppointment,
+  generateReport,
 } = require("../controllers/appointmentsController");
 const { protect, restrictTo } = require("../controllers/authController");
 
@@ -18,6 +19,8 @@ router
 router.use(restrictTo("admin", "receptionist"));
 
 router.route("/").post(createAppointment);
+
+router.route("/report").get(generateReport);
 
 router.route("/:id").patch(updateAppointment).delete(deleteAppointment);
 

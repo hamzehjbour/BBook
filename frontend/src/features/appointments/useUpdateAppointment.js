@@ -8,7 +8,7 @@ export function useUpdateAppointment() {
   const queryClient = useQueryClient();
 
   const { mutate: updateAppointment, isPending } = useMutation({
-    mutationFn: (id, data) => updateAppointmentApi(user.token, id, data),
+    mutationFn: (data) => updateAppointmentApi(user.token, data),
 
     onSuccess: () => {
       queryClient.invalidateQueries(["appointments"]);

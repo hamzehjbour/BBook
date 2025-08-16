@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import styled from "styled-components";
+import { useUpdateAppointment } from "./useUpdateAppointment";
 
 const Overlay = styled.div`
   position: fixed;
@@ -40,48 +42,86 @@ const ButtonRow = styled.div`
   gap: 1rem;
 `;
 
-export default function EditModal({ appointment, onClose, onSave }) {
-  const [form, setForm] = useState({
-    clientName: appointment.clientName,
-    appointmentUTC: appointment.appointmentUTC,
-  });
+function formatDateForInput(date) {
+  const d = new Date(date);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+}
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
+export default function EditModal({
+  appointment,
+  onClose,
+  setIsEdit,
+  setEditItem,
+}) {
+  const { register, handleSubmit } = useForm();
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    onSave({ ...appointment, ...form });
+  const { updateAppointment } = useUpdateAppointment();
+  const queryClient = useQueryClient();
+
+  function onSubmit(data) {
+    const updatedItem = {
+      ...appointment,
+      ...data,
+      appointmentUTC: new Date(data.appointmentUTC).toISOString(),
+    };
+
+    updateAppointment(updatedItem, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["appointments"]);
+        setIsEdit(false);
+        setEditItem(null);
+      },
+    });
   }
 
   return (
     <Overlay>
       <ModalWrapper>
         <h3>Edit Appointment</h3>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <FormGroup>
             <Label>Client Name</Label>
             <Input
-              name="clientName"
-              value={form.clientName}
-              onChange={handleChange}
+              id="clientName"
+              defaultValue={appointment.clientName}
+              {...register("clientName")}
             />
           </FormGroup>
+
+          <FormGroup>
+            <Label>Status</Label>
+            <select
+              id="status"
+              defaultValue={appointment.status.toLowerCase()}
+              {...register("status", {
+                required: "This field is required",
+              })}
+            >
+              <option value="">Select status</option>
+              <option value="pending">Pending</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+            </select>
+          </FormGroup>
+
           <FormGroup>
             <Label>Date</Label>
             <Input
-              name="appointmentUTC"
-              value={form.appointmentUTC}
-              onChange={handleChange}
+              id="appointmentUTC"
+              defaultValue={formatDateForInput(appointment.appointmentUTC)}
+              {...register("appointmentUTC")}
               type="datetime-local"
             />
           </FormGroup>
           <ButtonRow>
-            <button type="button" onClick={onClose}>
+            <button type="reset" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit " onClick={onSave}>
+            <button type="submit " onClick={handleSubmit}>
               Save
             </button>
           </ButtonRow>

@@ -15,6 +15,15 @@ const GlobalStyles = createGlobalStyle`
   --color-grey-0: #fff;
   --color-grey-3: #dee2e6;
   --color-grey-7: #495057;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0px 0.6rem 2.4rem rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 2.4rem 3.2rem rgba(0, 0, 0, 0.4);
+
+  --border-radius-tiny: 3px;
+  --border-radius-sm: 5px;
+  --border-radius-md: 7px;
+  --border-radius-lg: 9px;
 }
 
 *,

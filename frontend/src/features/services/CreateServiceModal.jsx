@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import styled from "styled-components";
+import { useCreateService } from "./useCreateService";
 
 const Overlay = styled.div`
   position: fixed;
@@ -40,43 +42,56 @@ const ButtonRow = styled.div`
   gap: 1rem;
 `;
 
-export default function CreateModal({ onClose, onSave }) {
-  const [form, setForm] = useState({
-    name: "",
-    price: 0,
-    category: "",
-  });
+const Error = styled.span`
+  font-size: 1.4rem;
+  color: var(--color-red-700);
+`;
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    // console.log({ ...form, [e.target.name]: e.target.value });
-  }
+export default function CreateModal({ onClose, setIsCreate }) {
+  const { register, handleSubmit, reset, formState } = useForm();
+  const { createService } = useCreateService();
+  const queryClient = useQueryClient();
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  const { errors } = formState;
+
+  function onSubmit(data) {
     const payload = {
-      ...form,
-      price: parseInt(form.price, 10),
+      ...data,
+      price: parseInt(data.price, 10),
     };
-    onSave(payload);
+
+    createService(payload, {
+      onSuccess: () => {
+        setIsCreate(false);
+        reset();
+        queryClient.invalidateQueries(["services"]);
+      },
+    });
   }
 
   return (
     <Overlay>
       <ModalWrapper>
         <h3>Create Service</h3>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <FormGroup>
             <Label>Service Name</Label>
-            <Input name="name" value={form.name} onChange={handleChange} />
+            <Input
+              id="name"
+              {...register("name", {
+                required: "This field is required",
+              })}
+            />
+            {errors?.name?.message && <Error>{errors?.name?.message}</Error>}
           </FormGroup>
 
           <FormGroup>
             <Label>Service Category</Label>
             <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
+              id="category"
+              {...register("category", {
+                required: "This field is required",
+              })}
             >
               <option value="">Select Category</option>
               <option value="Hair">Hair</option>
@@ -84,22 +99,33 @@ export default function CreateModal({ onClose, onSave }) {
               <option value="Skin Care">Skin Care</option>
               <option value="Makeup">Makeup</option>
             </select>
+
+            {errors?.category?.message && (
+              <Error>{errors?.category?.message}</Error>
+            )}
           </FormGroup>
           <FormGroup>
             <Label>Service Price</Label>
             <Input
-              name="price"
+              id="price"
               type="number"
-              value={form.price}
-              onChange={handleChange}
+              defaultValue={0}
+              {...register("price", {
+                required: "This field is required",
+                validate: (val) =>
+                  val > 0 || "The price must be greater than 0",
+              })}
             />
+            {errors?.price?.message && <Error>{errors?.price?.message}</Error>}
           </FormGroup>
 
           <ButtonRow>
-            <button type="button" onClick={onClose}>
+            <button type="reset" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit">Save</button>
+            <button type="submit" onClick={handleSubmit}>
+              Save
+            </button>
           </ButtonRow>
         </form>
       </ModalWrapper>

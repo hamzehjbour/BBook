@@ -23,7 +23,11 @@ exports.getServices = async (req, res, next) => {
       if (minPrice) filters.price.gte = Number(minPrice);
     }
 
-    if (category) filters.category = category;
+    if (category) {
+      filters.category = {
+        contains: category,
+      };
+    }
 
     if (includeDeleted) {
       filters.isDeleted = undefined;
@@ -52,7 +56,7 @@ exports.getServices = async (req, res, next) => {
 
     res.status(200).json({
       status: "success",
-      result: services.length,
+      result: totalRows,
       page: Number(page),
       totalPages: Math.ceil(totalRows / take),
       data: {

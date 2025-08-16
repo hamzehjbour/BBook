@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import styled from "styled-components";
+import { useCreateUser } from "./useCreateUser";
 
 const Overlay = styled.div`
   position: fixed;
@@ -40,85 +42,118 @@ const ButtonRow = styled.div`
   gap: 1rem;
 `;
 
-export default function CreateModal({ onClose, onSave }) {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "",
-  });
+const Error = styled.span`
+  font-size: 1.4rem;
+  color: var(--color-red-700);
+`;
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    // console.log({ ...form, [e.target.name]: e.target.value });
-  }
+export default function CreateModal({ onClose, setIsCreate }) {
+  const { register, handleSubmit, reset, formState, getValues } = useForm();
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  const queryClient = useQueryClient();
+  const { createUser } = useCreateUser();
+
+  const { errors } = formState;
+
+  function onSubmit(data) {
     const payload = {
-      ...form,
+      ...data,
     };
-    onSave(payload);
+    // onSave(payload);
+
+    createUser(payload, {
+      onSuccess: () => {
+        setIsCreate(false);
+        reset();
+        queryClient.invalidateQueries(["users"]);
+      },
+    });
   }
 
   return (
     <Overlay>
       <ModalWrapper>
         <h3>Create User</h3>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <FormGroup>
             <Label>user Name</Label>
             <Input
-              name="name"
+              id="name"
               type="text"
-              value={form.name}
-              onChange={handleChange}
+              {...register("name", {
+                required: "This field is required",
+              })}
             />
+
+            {errors?.name?.message && <Error>{errors?.name?.message}</Error>}
           </FormGroup>
 
           <FormGroup>
             <Label>user role</Label>
-            <select name="role" value={form.role} onChange={handleChange}>
+            <select
+              id="role"
+              {...register("role", {
+                required: "This field is required",
+              })}
+            >
               <option value="">Select role</option>
               <option value="admin">Admin</option>
               <option value="staff">Staff</option>
               <option value="receptionist">Receptionist</option>
             </select>
+            {errors?.role?.message && <Error>{errors?.role?.message}</Error>}
           </FormGroup>
+
           <FormGroup>
             <Label>User email</Label>
             <Input
-              name="email"
+              id="email"
               type="text"
-              value={form.email}
-              onChange={handleChange}
+              {...register("email", {
+                required: "This field is required",
+              })}
             />
+            {errors?.email?.message && <Error>{errors?.email?.message}</Error>}
           </FormGroup>
+
           <FormGroup>
             <Label>Password</Label>
             <Input
-              name="password"
+              id="password"
               type="password"
-              value={form.password}
-              onChange={handleChange}
+              {...register("password", {
+                required: "This field is required",
+              })}
             />
+            {errors?.password?.message && (
+              <Error>{errors?.password?.message}</Error>
+            )}
           </FormGroup>
+
           <FormGroup>
             <Label>Confirm Password</Label>
             <Input
-              name="confirmPassword"
+              id="confirmPassword"
               type="password"
-              value={form.confirmPassword}
-              onChange={handleChange}
+              {...register("confirmPassword", {
+                required: "This field is required",
+                validate: (val) =>
+                  getValues().password === val ||
+                  "password and confirm password must match",
+              })}
             />
+            {errors?.confirmPassword?.message && (
+              <Error>{errors?.confirmPassword?.message}</Error>
+            )}
           </FormGroup>
 
           <ButtonRow>
-            <button type="button" onClick={onClose}>
+            <button type="reset" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit">Save</button>
+            <button type="submit" onClick={handleSubmit}>
+              Save
+            </button>
           </ButtonRow>
         </form>
       </ModalWrapper>

@@ -1,17 +1,19 @@
 import styled from "styled-components";
-import Spinner from "../ui/Spinner";
 
+import { useState } from "react";
+import CreateModal from "../features/services/CreateServiceModal";
+import EditModal from "../features/services/EditServiceModal";
+import ServicesTableOperations from "../features/services/ServicesTableOperations";
+import { useCreateService } from "../features/services/useCreateService";
+import { useDeleteService } from "../features/services/useDeleteService";
 import { useServices } from "../features/services/useServices";
+import { useUpdateService } from "../features/services/useUpdateService";
+import { useLocalStorageState } from "../hooks/useLocalStorageState";
+import Spinner from "../ui/Spinner";
+import Pagination from "../ui/Pagination";
+import ButtonGroup from "../ui/ButtonGroup";
 import Row from "../ui/Row";
 import StyledParagraph from "../ui/StyledParagraph";
-import ButtonGroup from "../ui/ButtonGroup";
-import { useLocalStorageState } from "../hooks/useLocalStorageState";
-import { useState } from "react";
-import EditModal from "../features/services/EditServiceModal";
-import { useUpdateService } from "../features/services/useUpdateService";
-import { useDeleteService } from "../features/services/useDeleteService";
-import CreateModal from "../features/services/CreateServiceModal";
-import { useCreateService } from "../features/services/useCreateService";
 
 const StyledDiv = styled.div`
   display: flex;
@@ -20,11 +22,11 @@ const StyledDiv = styled.div`
 `;
 
 function Services() {
-  const { isPending, data } = useServices();
+  const { isPending, data, result } = useServices();
   const [user] = useLocalStorageState({}, "user");
-  const { updateService, isPending: isEditing } = useUpdateService();
+  const { isPending: isEditing } = useUpdateService();
   const { deleteService, isPending: isDeleting } = useDeleteService();
-  const { createService, isPending: isCreating } = useCreateService();
+  const { isPending: isCreating } = useCreateService();
 
   const [isEdit, setIsEdit] = useState(false);
   const [isCreate, setIsCreate] = useState(false);
@@ -33,26 +35,24 @@ function Services() {
   if (isPending) return <Spinner />;
 
   function handleEdit(id) {
-    const item = data.data.services.find((i) => i.id === id);
+    const item = data.services.find((i) => i.id === id);
     setEditItem(item);
     setIsEdit((editItem) => !editItem);
-  }
-
-  function handleSaveEdit(updatedItem) {
-    setIsEdit(false);
-    setEditItem(null);
-    console.log(updatedItem);
-    updateService({ id: updatedItem.id, data: updatedItem });
-  }
-
-  function handleSaveCreate(newItem) {
-    setIsCreate(false);
-    createService(newItem);
   }
 
   return (
     <StyledDiv>
       <h1>Services</h1>
+      <ServicesTableOperations>
+        {user?.user?.role === "admin" ? (
+          <button
+            onClick={() => setIsCreate((isCreate) => !isCreate)}
+            disabled={isCreating}
+          >
+            Add Service
+          </button>
+        ) : null}
+      </ServicesTableOperations>
       <div>
         <Row>
           <StyledParagraph>
@@ -66,7 +66,7 @@ function Services() {
           </StyledParagraph>
         </Row>
 
-        {data.data.services.map((item) => (
+        {data.services.map((item) => (
           <Row key={item.id}>
             <StyledParagraph>{item.name}</StyledParagraph>
             <StyledParagraph>{item.price}JD</StyledParagraph>
@@ -95,25 +95,19 @@ function Services() {
         <EditModal
           service={editItem}
           onClose={() => setIsEdit(false)}
-          onSave={handleSaveEdit}
+          setEditItem={setEditItem}
+          setIsEdit={setIsEdit}
         />
       )}
 
       {isCreate && (
         <CreateModal
           onClose={() => setIsCreate((isCreate) => !isCreate)}
-          onSave={handleSaveCreate}
+          setIsCreate={setIsCreate}
         />
       )}
 
-      {user?.user?.role === "admin" ? (
-        <button
-          onClick={() => setIsCreate((isCreate) => !isCreate)}
-          disabled={isCreating}
-        >
-          Add
-        </button>
-      ) : null}
+      <Pagination count={result} />
     </StyledDiv>
   );
 }

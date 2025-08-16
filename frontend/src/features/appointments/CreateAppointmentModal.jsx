@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import styled from "styled-components";
+import { useCreateAppointment } from "./useCreateAppointment";
 
 const Overlay = styled.div`
   position: fixed;
@@ -40,61 +42,67 @@ const ButtonRow = styled.div`
   gap: 1rem;
 `;
 
+const Error = styled.span`
+  font-size: 1.4rem;
+  color: var(--color-red-700);
+`;
+
 export default function CreateAppointmentModal({
   staff,
   services,
   onClose,
-  onSave,
+  setIsCreate,
 }) {
-  const [form, setForm] = useState({
-    clientName: "",
-    serviceId: "",
-    staffId: "",
-    appointmentUTC: "",
-    status: "pending",
-  });
+  const { register, handleSubmit, reset, formState } = useForm();
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  }
+  const { createAppointment } = useCreateAppointment();
+  const queryClient = useQueryClient();
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  const { errors } = formState;
 
-    const payload = {
-      ...form,
-      serviceId: parseInt(form.serviceId, 10),
-      staffId: parseInt(form.staffId, 10),
-      appointmentUTC: new Date(form.appointmentUTC).toISOString(),
+  function onSubmit(data) {
+    const newItem = {
+      ...data,
+      serviceId: parseInt(data.serviceId, 10),
+      staffId: parseInt(data.staffId, 10),
+      appointmentUTC: new Date(data.appointmentUTC).toISOString(),
+      status: "pending",
     };
 
-    onSave(payload);
-    console.log(payload);
+    createAppointment(newItem, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["appointments"]);
+        reset();
+        setIsCreate(false);
+      },
+    });
   }
 
   return (
     <Overlay>
       <ModalWrapper>
         <h3>Add Appointment</h3>
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <FormGroup>
             <Label>Client Name</Label>
             <Input
-              required
-              name="clientName"
-              value={form.clientName}
-              onChange={handleChange}
+              id="clientName"
+              {...register("clientName", {
+                required: "This field is required",
+              })}
             />
+            {errors?.clientName?.message && (
+              <Error>{errors.clientName.message}</Error>
+            )}
           </FormGroup>
 
           <FormGroup>
             <Label>Service</Label>
             <select
-              required
-              name="serviceId"
-              value={form.serviceId}
-              onChange={handleChange}
+              id="serviceId"
+              {...register("serviceId", {
+                required: "This field is required",
+              })}
             >
               <option value="">Select a service</option>
               {services.map((item) => (
@@ -103,14 +111,17 @@ export default function CreateAppointmentModal({
                 </option>
               ))}
             </select>
+            {errors?.serviceId?.message && (
+              <Error>{errors.serviceId.message}</Error>
+            )}
           </FormGroup>
           <FormGroup>
             <Label>Staff</Label>
             <select
-              required
-              name="staffId"
-              value={form.staffId}
-              onChange={handleChange}
+              id="staffId"
+              {...register("staffId", {
+                required: "This field is required",
+              })}
             >
               <option value="">Select a staff</option>
               {staff.map((item) => (
@@ -119,19 +130,25 @@ export default function CreateAppointmentModal({
                 </option>
               ))}
             </select>
+            {errors?.staffId?.message && (
+              <Error>{errors.staffId.message}</Error>
+            )}
           </FormGroup>
           <FormGroup>
             <Label>Date</Label>
             <Input
-              required
-              name="appointmentUTC"
+              id="appointmentUTC"
               type="datetime-local"
-              value={form.appointmentUTC}
-              onChange={handleChange}
+              {...register("appointmentUTC", {
+                required: "This field is required",
+              })}
             />
+            {errors?.appointmentUTC?.message && (
+              <Error>{errors.appointmentUTC.message}</Error>
+            )}
           </FormGroup>
           <ButtonRow>
-            <button type="button" onClick={onClose}>
+            <button type="reset" onClick={onClose}>
               Cancel
             </button>
             <button type="submit" onClick={handleSubmit}>
