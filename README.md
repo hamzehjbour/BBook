@@ -1,12 +1,90 @@
-# React + Vite
+# Full-Stack Job Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack web application built with **React (Vite)** for the frontend, **Node.js (Express + Prisma)** for the backend, and **MySQL** as the database. The system is containerized using **Docker**.
 
-Currently, two official plugins are available:
+## 📁 Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+<pre lang='markdown'>
+```
+  .
+  ├── backend
+  │ ├── controllers
+  │ ├── generated
+  │ ├── prisma
+  │ ├── routes
+  │ ├── utils
+  │ ├── .env
+  │ ├── app.js
+  │ ├── dockerfile
+  │ └── server.js
+  ├── frontend
+  │ ├── public
+  │ ├── src
+  │ │ ├── features
+  │ │ │ ├── appointments
+  │ │ │ ├── authentication
+  │ │ │ ├── services
+  │ │ │ └── users
+  │ │ ├── hooks
+  │ │ ├── pages
+  │ │ ├── services
+  │ │ ├── styles
+  │ │ ├── ui
+  │ │ ├── App.jsx
+  │ │ └── main.jsx
+  │ └── dockerfile
+  ├── docker-compose.yml
+  └── README.md
+```
+<pre>
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Docker & Docker Compose installed
+- Node.js and npm installed (for running locally without Docker)
+
+---
+
+## 🚀 Running the Project with Docker (Recommended)
+
+1. Clone the repository:
+
+   git clone https://github.com/hamzehjbour/BBook.git
+
+
+2. Build and run the app:
+   
+   docker compose up --build
+
+
+3. Access the app:
+
+  frontend: http://localhost:5173
+  Backend API: http://localhost:3000/api
+  MySQL: Exposed internally to the backend at db:3306
+
+
+
+## Test Accounts
+
+1. Admin
+
+   email: admin@example.com
+   password: pass1234
+
+2. Receptionist
+
+   email: receptionist@example.com
+   password: pass1234
+
+
+3. Staff
+
+   A. email: "staff1@example.com"
+      password: pass1234
+
+   B. email: "staff2@example.com" 
+      password: pass1234
+
+   C. email: "staff3@example.com"
+      password: pass1234
